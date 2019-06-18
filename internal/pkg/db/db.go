@@ -54,28 +54,24 @@ func Exec(query string, args ...interface{}) (sql.Result, error) {
 	return dbObj.Exec(query, args...)
 }
 
-func isExists(dbName string, tableName string, where string, args ...interface{}) (id int64, err error) {
-	row, err := findRowBy(dbName, tableName, "id", where, args...)
+func isExists(dbName string, tableName string, key string, where string, args ...interface{}) (id interface{}, err error) {
+	row, err := findRowBy(dbName, tableName, key, where, args...)
 	if err != nil {
 		return
 	}
 	err = row.Scan(&id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return 0, nil
+			return nil, nil
 		}
 		return
 	}
 	return id, nil
 }
 
-func insert(dbName string, tableName string, cols string, values string, args ...interface{}) (int64, error) {
-	result, err := Exec("INSERT INTO "+dbName+"."+tableName+" ("+cols+") VALUES ("+values+")", args...)
-	if err != nil {
-		return 0, err
-	}
-
-	return result.LastInsertId()
+func insert(dbName string, tableName string, cols string, values string, args ...interface{}) error {
+	_, err := QueryRow("INSERT INTO "+dbName+"."+tableName+" ("+cols+") VALUES ("+values+")", args...)
+	return err
 }
 
 func findRowBy(dbName string, tableName string, cols string, where string, args ...interface{}) (*sql.Row, error) {
