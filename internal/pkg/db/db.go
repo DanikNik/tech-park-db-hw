@@ -17,7 +17,7 @@ func Open() (err error) {
 	if dbObj != nil {
 		return AlreadyInit
 	}
-	dbObj, err = sql.Open("postgres", "postgres://postgres:postgres@localhost:32768/tech-db-forum?sslmode=disable")
+	dbObj, err = sql.Open("postgres", "postgres://postgres:postgres@localhost:32768/tp-db?sslmode=disable")
 	if err != nil {
 		return
 	}

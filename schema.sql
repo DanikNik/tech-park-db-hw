@@ -1,4 +1,4 @@
-CREATE EXTENSION IF NOT EXISTS CITEXT;
+DROP EXTENSION IF EXISTS CITEXT;
 --SET ENABLE_SEQSCAN = 'off';
 
 DROP TABLE IF EXISTS users, forum, thread, post, vote, forum_users CASCADE;
@@ -12,8 +12,8 @@ CREATE TABLE users
 (
     id       SERIAL PRIMARY KEY NOT NULL,
 
-    nickname CITEXT             NOT NULL,
-    email    CITEXT             NOT NULL,
+    nickname varchar(50)             NOT NULL,
+    email    varchar(50)             NOT NULL,
 
     about    TEXT DEFAULT NULL,
     fullname TEXT               NOT NULL
@@ -36,7 +36,7 @@ CREATE TABLE users
 CREATE TABLE forum
 (
     id      SERIAL PRIMARY KEY,
-    slug    CITEXT                        NOT NULL,
+    slug    varchar(50)                        NOT NULL,
     title   TEXT                          NOT NULL,
 
     author  INTEGER references users (id) NOT NULL,
@@ -57,7 +57,7 @@ CREATE TABLE forum
 CREATE TABLE thread
 (
     id      SERIAL PRIMARY KEY            NOT NULL,
-    slug    CITEXT DEFAULT NULL,
+    slug    varchar(50) DEFAULT NULL,
 
     title   TEXT                          NOT NULL,
     message TEXT                          NOT NULL,
