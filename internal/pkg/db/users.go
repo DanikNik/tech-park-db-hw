@@ -44,8 +44,8 @@ func GetUser(nickname string) (*models.User, error) {
 	}
 	var user models.User
 	err = userObj.Scan(&user.Nickname, &user.Email, &user.Fullname, &user.About)
-	if err != nil {
-		return nil, err
+	if err == pgx.ErrNoRows {
+		return nil, ErrNotFound
 	}
 	return &user, nil
 }

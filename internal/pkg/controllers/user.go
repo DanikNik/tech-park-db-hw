@@ -44,7 +44,17 @@ func UserCreate(ctx *routing.Context) error {
 }
 
 func UserGetOne(ctx *routing.Context) error {
-	//nick := ctx.Param("nickname")
+	nick := ctx.Param("nickname")
+	userData, err := db.GetUser(nick)
+	if err == db.ErrNotFound {
+		msg, _ := json.Marshal(models.GenerateUserNotFoundMessage(0))
+		ctx.SetStatusCode(fasthttp.StatusNotFound)
+		ctx.Write(msg)
+		return nil
+	}
+	ctx.SetStatusCode(fasthttp.StatusOK)
+	msg, _ := json.Marshal(userData)
+	ctx.Write(msg)
 	return nil
 }
 
