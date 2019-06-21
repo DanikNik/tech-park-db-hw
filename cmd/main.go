@@ -1,8 +1,10 @@
 package main
 
 import (
-	"fmt"
+	"github.com/valyala/fasthttp"
+	"log"
 	"tech-park-db-hw/internal/pkg/db"
+	"tech-park-db-hw/internal/pkg/router"
 )
 
 func main() {
@@ -12,10 +14,10 @@ func main() {
 	}
 	defer db.Close()
 	//
-	//router := customRouter.NewRouter()
-	//log.Println("Server running at 5000")
-	//panic(fasthttp.ListenAndServe(":5000", router.HandleRequest))
+	serverRouter := router.NewRouter()
+	log.Println("Server running at 5000")
+	panic(fasthttp.ListenAndServe(":5000", serverRouter.HandleRequest))
 
-	user, _ := db.GetUser("qwerty")
-	fmt.Println(*user)
+	//user, _ := db.GetUser("qwerty")
+	//fmt.Println(*user)
 }

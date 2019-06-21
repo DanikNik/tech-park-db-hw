@@ -23,8 +23,11 @@ func UserCreate(ctx *routing.Context) error {
 	err = db.CreateUser(&userData)
 	if err != nil {
 		ctx.SetStatusCode(fasthttp.StatusConflict)
-		user, _ := db.GetUser(nick)
-		userList := []models.User{*user}
+		userList, err := db.SelectUsersOnConflict(userData.Nickname, userData.Email)
+		if err != nil {
+			ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+			return err
+		}
 		fmt.Println(userList)
 		data, err := json.Marshal(&userList)
 		ctx.Write(data)
@@ -41,6 +44,7 @@ func UserCreate(ctx *routing.Context) error {
 }
 
 func UserGetOne(ctx *routing.Context) error {
+	//nick := ctx.Param("nickname")
 	return nil
 }
 

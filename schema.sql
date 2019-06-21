@@ -1,19 +1,20 @@
-DROP EXTENSION IF EXISTS CITEXT;
---SET ENABLE_SEQSCAN = 'off';
-
-DROP TABLE IF EXISTS users, forum, thread, post, vote, forum_users CASCADE;
+DROP TABLE IF EXISTS tp_forum.users, tp_forum.forum, tp_forum.thread, tp_forum.post, tp_forum.vote CASCADE;
+DROP SCHEMA IF EXISTS tp_forum CASCADE;
+DROP EXTENSION IF EXISTS CITEXT CASCADE;
 
 DROP FUNCTION IF EXISTS thread_insert();
+CREATE SCHEMA IF NOT EXISTS tp_forum;
 
+CREATE EXTENSION IF NOT EXISTS CITEXT;
 --
 -- USERS
 --
-CREATE TABLE users
+CREATE TABLE tp_forum.users
 (
     id       SERIAL PRIMARY KEY NOT NULL,
 
-    nickname varchar(50)             NOT NULL,
-    email    varchar(50)             NOT NULL,
+    nickname CITEXT        NOT NULL,
+    email    CITEXT        NOT NULL,
 
     about    TEXT DEFAULT NULL,
     fullname TEXT               NOT NULL
@@ -22,26 +23,26 @@ CREATE TABLE users
 -- CREATE INDEX users_covering_index
 --   ON users (nickname, email, about, fullname);
 --
--- CREATE UNIQUE INDEX users_nickname_index
---   ON users (nickname);
+CREATE UNIQUE INDEX users_nickname_index
+  ON tp_forum.users (nickname);
 --
--- CREATE UNIQUE INDEX users_email_index
---   ON users (email);
+CREATE UNIQUE INDEX users_email_index
+  ON tp_forum.users(email);
 --
 -- CREATE INDEX ON users (nickname, email);
 
 --
 -- FORUM
 --
-CREATE TABLE forum
+CREATE TABLE tp_forum.forum
 (
     id      SERIAL PRIMARY KEY,
-    slug    varchar(50)                        NOT NULL,
-    title   TEXT                          NOT NULL,
+    slug    CITEXT                            NOT NULL,
+    title   TEXT                                   NOT NULL,
 
-    author  INTEGER references users (id) NOT NULL,
-    threads INTEGER                       NOT NULL DEFAULT 0,
-    posts   BIGINT                        NOT NULL DEFAULT 0
+    author  INTEGER references tp_forum.users (id) NOT NULL,
+    threads INTEGER                                NOT NULL DEFAULT 0,
+    posts   BIGINT                                 NOT NULL DEFAULT 0
 );
 
 -- CREATE UNIQUE INDEX forum_slug_index
@@ -54,17 +55,17 @@ CREATE TABLE forum
 --
 -- THREAD
 --
-CREATE TABLE thread
+CREATE TABLE tp_forum.thread
 (
-    id      SERIAL PRIMARY KEY            NOT NULL,
-    slug    varchar(50) DEFAULT NULL,
+    id      SERIAL PRIMARY KEY                     NOT NULL,
+    slug    CITEXT DEFAULT NULL,
 
-    title   TEXT                          NOT NULL,
-    message TEXT                          NOT NULL,
+    title   TEXT                                   NOT NULL,
+    message TEXT                                   NOT NULL,
 
-    forum   INTEGER REFERENCES forum (id) NOT NULL,
+    forum   INTEGER REFERENCES tp_forum.forum (id) NOT NULL,
 
-    author  INTEGER REFERENCES users (id) NOT NULL,
+    author  INTEGER REFERENCES tp_forum.users (id) NOT NULL,
 
     created TIMESTAMPTZ
 );
@@ -111,19 +112,19 @@ CREATE TABLE thread
 --
 -- POST
 --
-CREATE TABLE post
+CREATE TABLE tp_forum.post
 (
     id        SERIAL primary key,
 
-    user_nick TEXT                           NOT NULL,
+    user_nick TEXT                                    NOT NULL,
 
-    message   TEXT                           NOT NULL,
+    message   TEXT                                    NOT NULL,
     created   TIMESTAMPTZ,
 
-    thread    INTEGER REFERENCES thread (id) NOT NULL,
+    thread    INTEGER REFERENCES tp_forum.thread (id) NOT NULL,
 
-    parent    INTEGER                                 DEFAULT 0,
-    is_edited BOOLEAN                        NOT NULL DEFAULT FALSE
+    parent    INTEGER references tp_forum.post (id)            DEFAULT 0,
+    is_edited BOOLEAN                                 NOT NULL DEFAULT FALSE
 );
 
 
@@ -149,12 +150,12 @@ CREATE TABLE post
 --
 -- VOTE
 --
-CREATE TABLE vote
+CREATE TABLE tp_forum.vote
 (
     id        SERIAL,
 
-    user_id   INTEGER references users (id)  NOT NULL,
-    thread_id INTEGER REFERENCES thread (id) NOT NULL,
+    user_id   INTEGER references tp_forum.users (id)  NOT NULL,
+    thread_id INTEGER REFERENCES tp_forum.thread (id) NOT NULL,
 
     vote_val  INTEGER,
     prev_vote INTEGER DEFAULT 0
@@ -167,3 +168,9 @@ CREATE TABLE vote
 --
 -- CREATE INDEX forum_users_covering_index2
 --     ON forum_users (forumId, lower(nickname), nickname, email, about, fullname);
+
+-- SELECT * FROM tp_forum.users where nickname ILIKE 'шФагф';
+
+INSERT INTO tp_forum.users (nickname, email, about, fullname) VALUES ('qwerty', 'qwerty', 'qwerty', 'qwerty');
+
+TRUNCATE TABLE  tp_forum.users, tp_forum.forum, tp_forum.thread, tp_forum.post, tp_forum.vote CASCADE;

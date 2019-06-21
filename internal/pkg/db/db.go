@@ -3,25 +3,46 @@ package db
 import (
 	"database/sql"
 	"errors"
+	"fmt"
+	"github.com/jackc/pgx"
 	_ "github.com/lib/pq"
 )
 
-var dbObj *sql.DB
+var dbObj *pgx.Conn
 
 var (
 	NotInit     = errors.New("db wasn't initialized")
 	AlreadyInit = errors.New("db already initialized")
+	ErrNotFound = errors.New("n")
+	ErrConflict = errors.New("c")
+)
+
+const (
+	uniqueIntegrityError = "23505"
+	foreignKeyError      = "23503"
+	notNullError         = "23502"
 )
 
 func Open() (err error) {
+	connConfig := pgx.ConnConfig{
+		User:              "postgres",
+		Password:          "postgres",
+		Host:              "localhost",
+		Port:              32768,
+		Database:          "tech-db-forum",
+		TLSConfig:         nil,
+		UseFallbackTLS:    false,
+		FallbackTLSConfig: nil,
+	}
+
 	if dbObj != nil {
 		return AlreadyInit
 	}
-	dbObj, err = sql.Open("postgres", "postgres://postgres:postgres@localhost:32768/tp-db?sslmode=disable")
+	dbObj, err = pgx.Connect(connConfig)
 	if err != nil {
-		return
+		return fmt.Errorf("Unable to establish connection: %v\n", err)
 	}
-	err = dbObj.Ping()
+
 	return
 }
 
@@ -29,7 +50,7 @@ func Close() error {
 	return dbObj.Close()
 }
 
-func QueryRow(query string, args ...interface{}) (*sql.Row, error) {
+func QueryRow(query string, args ...interface{}) (*pgx.Row, error) {
 	if dbObj == nil {
 		return nil, NotInit
 	}
@@ -37,7 +58,7 @@ func QueryRow(query string, args ...interface{}) (*sql.Row, error) {
 	return dbObj.QueryRow(query, args...), nil
 }
 
-func Query(query string, args ...interface{}) (*sql.Rows, error) {
+func Query(query string, args ...interface{}) (*pgx.Rows, error) {
 	if dbObj == nil {
 		return nil, NotInit
 	}
@@ -45,12 +66,7 @@ func Query(query string, args ...interface{}) (*sql.Rows, error) {
 	return dbObj.Query(query, args...)
 }
 
-func Exec(query string, args ...interface{}) (sql.Result, error) {
-	if dbObj == nil {
-		var emptyResult sql.Result
-		return emptyResult, NotInit
-	}
-
+func Exec(query string, args ...interface{}) (pgx.CommandTag, error) {
 	return dbObj.Exec(query, args...)
 }
 
@@ -74,7 +90,7 @@ func insert(dbName string, tableName string, cols string, values string, args ..
 	return err
 }
 
-func findRowBy(dbName string, tableName string, cols string, where string, args ...interface{}) (*sql.Row, error) {
+func findRowBy(dbName string, tableName string, cols string, where string, args ...interface{}) (*pgx.Row, error) {
 	if where == "" {
 		where = "1"
 	}
@@ -107,7 +123,7 @@ func updateBy(dbName string, tableName string, set string, where string, args ..
 		return 0, err
 	}
 
-	return result.RowsAffected()
+	return result.RowsAffected(), nil
 }
 
 func removeBy(dbName string, tableName string, where string, args ...interface{}) (int64, error) {
@@ -123,7 +139,7 @@ func removeBy(dbName string, tableName string, where string, args ...interface{}
 		return 0, err
 	}
 
-	return result.RowsAffected()
+	return result.RowsAffected(), nil
 }
 
 func truncate(dbName string, tableName string) error {
