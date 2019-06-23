@@ -1016,78 +1016,7 @@ func (v *Post) UnmarshalJSON(data []byte) error {
 func (v *Post) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels8(l, v)
 }
-func easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels9(in *jlexer.Lexer, out *NotFoundMessage) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeString()
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "message":
-			out.Msg = string(in.String())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels9(out *jwriter.Writer, in NotFoundMessage) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"message\":"
-		if first {
-			first = false
-			out.RawString(prefix[1:])
-		} else {
-			out.RawString(prefix)
-		}
-		out.String(string(in.Msg))
-	}
-	out.RawByte('}')
-}
-
-// MarshalJSON supports json.Marshaler interface
-func (v NotFoundMessage) MarshalJSON() ([]byte, error) {
-	w := jwriter.Writer{}
-	easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels9(&w, v)
-	return w.Buffer.BuildBytes(), w.Error
-}
-
-// MarshalEasyJSON supports easyjson.Marshaler interface
-func (v NotFoundMessage) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels9(w, v)
-}
-
-// UnmarshalJSON supports json.Unmarshaler interface
-func (v *NotFoundMessage) UnmarshalJSON(data []byte) error {
-	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels9(&r, v)
-	return r.Error()
-}
-
-// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *NotFoundMessage) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels9(l, v)
-}
-func easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels10(in *jlexer.Lexer, out *ModelError) {
+func easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels9(in *jlexer.Lexer, out *ModelError) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1118,7 +1047,7 @@ func easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels10(in *jlexer.Lexer, out
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels10(out *jwriter.Writer, in ModelError) {
+func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels9(out *jwriter.Writer, in ModelError) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1138,27 +1067,27 @@ func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels10(out *jwriter.Writer, 
 // MarshalJSON supports json.Marshaler interface
 func (v ModelError) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels10(&w, v)
+	easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels9(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v ModelError) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels10(w, v)
+	easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels9(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *ModelError) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels10(&r, v)
+	easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels9(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *ModelError) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels10(l, v)
+	easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels9(l, v)
 }
-func easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels11(in *jlexer.Lexer, out *Forum) {
+func easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels10(in *jlexer.Lexer, out *Forum) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -1197,7 +1126,7 @@ func easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels11(in *jlexer.Lexer, out
 		in.Consumed()
 	}
 }
-func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels11(out *jwriter.Writer, in Forum) {
+func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels10(out *jwriter.Writer, in Forum) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -1257,23 +1186,94 @@ func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels11(out *jwriter.Writer, 
 // MarshalJSON supports json.Marshaler interface
 func (v Forum) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels11(&w, v)
+	easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels10(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v Forum) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels11(w, v)
+	easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels10(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *Forum) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels10(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *Forum) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels10(l, v)
+}
+func easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels11(in *jlexer.Lexer, out *ErrorMessage) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeString()
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "message":
+			out.Msg = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels11(out *jwriter.Writer, in ErrorMessage) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"message\":"
+		if first {
+			first = false
+			out.RawString(prefix[1:])
+		} else {
+			out.RawString(prefix)
+		}
+		out.String(string(in.Msg))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v ErrorMessage) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels11(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v ErrorMessage) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels11(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *ErrorMessage) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
 	easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels11(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
-func (v *Forum) UnmarshalEasyJSON(l *jlexer.Lexer) {
+func (v *ErrorMessage) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels11(l, v)
 }
