@@ -21,7 +21,7 @@ func UserCreate(ctx *routing.Context) error {
 	userData.Nickname = nick
 
 	err = db.CreateUser(&userData)
-	if err != nil {
+	if err == db.ErrConflict {
 		ctx.SetStatusCode(fasthttp.StatusConflict)
 		userList, err := db.SelectUsersOnConflict(userData.Nickname, userData.Email)
 		if err != nil {

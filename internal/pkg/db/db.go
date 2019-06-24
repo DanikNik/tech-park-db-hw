@@ -1,14 +1,14 @@
 package db
 
 import (
-	"database/sql"
 	"errors"
 	"fmt"
 	"github.com/jackc/pgx"
 	_ "github.com/lib/pq"
+	"time"
 )
 
-var dbObj *pgx.Conn
+var dbObj *pgx.ConnPool
 
 var (
 	NotInit     = errors.New("db wasn't initialized")
@@ -35,10 +35,17 @@ func Open() (err error) {
 		FallbackTLSConfig: nil,
 	}
 
+	poolConfig := pgx.ConnPoolConfig{
+		ConnConfig:     connConfig,
+		MaxConnections: 50,
+		AcquireTimeout: 10 * time.Second,
+		AfterConnect:   nil,
+	}
+
 	if dbObj != nil {
 		return AlreadyInit
 	}
-	dbObj, err = pgx.Connect(connConfig)
+	dbObj, err = pgx.NewConnPool(poolConfig)
 	if err != nil {
 		return fmt.Errorf("Unable to establish connection: %v\n", err)
 	}
@@ -46,8 +53,8 @@ func Open() (err error) {
 	return
 }
 
-func Close() error {
-	return dbObj.Close()
+func Close() {
+	dbObj.Close()
 }
 
 func QueryRow(query string, args ...interface{}) (*pgx.Row, error) {
@@ -70,84 +77,12 @@ func Exec(query string, args ...interface{}) (pgx.CommandTag, error) {
 	return dbObj.Exec(query, args...)
 }
 
-func isExists(dbName string, tableName string, key string, where string, args ...interface{}) (id interface{}, err error) {
-	row, err := findRowBy(dbName, tableName, key, where, args...)
-	if err != nil {
-		return
-	}
-	err = row.Scan(&id)
-	if err != nil {
-		if err == sql.ErrNoRows {
-			return nil, nil
-		}
-		return
-	}
-	return id, nil
-}
-
-func insert(dbName string, tableName string, cols string, values string, args ...interface{}) error {
-	_, err := QueryRow("INSERT INTO "+dbName+"."+tableName+" ("+cols+") VALUES ("+values+")", args...)
-	return err
-}
-
-func findRowBy(dbName string, tableName string, cols string, where string, args ...interface{}) (*pgx.Row, error) {
-	if where == "" {
-		where = "1"
-	}
-	return QueryRow("SELECT "+cols+" FROM "+dbName+"."+tableName+" WHERE "+where, args...)
-}
-
-// For future use
-//
-// func findRowsBy(dbName string, tableName string, cols string, where string, args ...interface{}) (*sql.Rows, error) {
-// 	if dbObj == nil {
-// 		return nil, NotInit
-// 	}
-//
-// 	if where == "" {
-// 		where = "1"
-// 	}
-// 	return Query("SELECT "+cols+" FROM "+dbName+"."+tableName+" WHERE "+where, args...)
-// }
-
-func updateBy(dbName string, tableName string, set string, where string, args ...interface{}) (int64, error) {
-	if dbObj == nil {
-		return 0, NotInit
-	}
-
-	if where == "" {
-		where = "1"
-	}
-	result, err := Exec("UPDATE "+dbName+"."+tableName+" SET "+set+" WHERE "+where, args...)
-	if err != nil {
-		return 0, err
-	}
-
-	return result.RowsAffected(), nil
-}
-
-func removeBy(dbName string, tableName string, where string, args ...interface{}) (int64, error) {
-	if dbObj == nil {
-		return 0, NotInit
-	}
-
-	if where == "" {
-		where = "1"
-	}
-	result, err := Exec("DELETE FROM "+dbName+"."+tableName+" WHERE "+where, args...)
-	if err != nil {
-		return 0, err
-	}
-
-	return result.RowsAffected(), nil
-}
-
-func truncate(dbName string, tableName string) error {
+func truncate() error {
 	if dbObj == nil {
 		return NotInit
 	}
 
-	_, err := Exec("TRUNCATE TABLE " + dbName + "." + tableName)
+	_, err := Exec("TRUNCATE TABLE tp_forum.users, tp_forum.forum, tp_forum.thread, tp_forum.post, tp_forum.vote CASCADE;")
 	if err != nil {
 		return err
 	}

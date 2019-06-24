@@ -405,7 +405,7 @@ func easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels4(in *jlexer.Lexer, out 
 		}
 		switch key {
 		case "id":
-			out.Id = float32(in.Float32())
+			out.Id = int(in.Int())
 		case "title":
 			out.Title = string(in.String())
 		case "author":
@@ -415,7 +415,7 @@ func easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels4(in *jlexer.Lexer, out 
 		case "message":
 			out.Message = string(in.String())
 		case "votes":
-			out.Votes = float32(in.Float32())
+			out.Votes = int(in.Int())
 		case "slug":
 			out.Slug = string(in.String())
 		case "created":
@@ -444,7 +444,7 @@ func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels4(out *jwriter.Writer, i
 		} else {
 			out.RawString(prefix)
 		}
-		out.Float32(float32(in.Id))
+		out.Int(int(in.Id))
 	}
 	{
 		const prefix string = ",\"title\":"
@@ -494,7 +494,7 @@ func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels4(out *jwriter.Writer, i
 		} else {
 			out.RawString(prefix)
 		}
-		out.Float32(float32(in.Votes))
+		out.Int(int(in.Votes))
 	}
 	if in.Slug != "" {
 		const prefix string = ",\"slug\":"
@@ -1113,9 +1113,9 @@ func easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels10(in *jlexer.Lexer, out
 		case "slug":
 			out.Slug = string(in.String())
 		case "posts":
-			out.Posts = float32(in.Float32())
+			out.Posts = int(in.Int())
 		case "threads":
-			out.Threads = float32(in.Float32())
+			out.Threads = int(in.Int())
 		default:
 			in.SkipRecursive()
 		}
@@ -1168,7 +1168,7 @@ func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels10(out *jwriter.Writer, 
 		} else {
 			out.RawString(prefix)
 		}
-		out.Float32(float32(in.Posts))
+		out.Int(int(in.Posts))
 	}
 	if in.Threads != 0 {
 		const prefix string = ",\"threads\":"
@@ -1178,7 +1178,7 @@ func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels10(out *jwriter.Writer, 
 		} else {
 			out.RawString(prefix)
 		}
-		out.Float32(float32(in.Threads))
+		out.Int(int(in.Threads))
 	}
 	out.RawByte('}')
 }

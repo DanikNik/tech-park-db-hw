@@ -8,24 +8,26 @@ import (
 
 func CreateUser(user *models.User) error {
 	_, err := Exec(CreateUserQuery, user.Nickname, user.Email, user.Fullname, user.About)
+	//defer rows.Close()
 	if err != nil {
 		if pqError, ok := err.(pgx.PgError); ok {
 			if pqError.Code == uniqueIntegrityError {
 				return ErrConflict
 			}
 		}
-		return err
+		panic(err)
 	}
-	return nil
+	return err
 }
 
 func SelectUsersOnConflict(nickname, email string) ([]models.User, error) {
-	rows, err := Query(SelectUsersWithNickOrEmail, nickname, email)
+	rows, err := dbObj.Query(SelectUsersWithNickOrEmail, nickname, email)
+	fmt.Printf("%+v", rows)
 	if err != nil {
 		return nil, err
 	}
 
-	var alikeUsers []models.User
+	alikeUsers := []models.User{}
 	defer rows.Close()
 	for rows.Next() {
 		user := models.User{}
