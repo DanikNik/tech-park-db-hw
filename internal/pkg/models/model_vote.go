@@ -7,5 +7,5 @@ type Vote struct {
 	Nickname string `json:"nickname"`
 
 	// Отданный голос.
-	Voice float32 `json:"voice"`
+	Voice int `json:"voice"`
 }

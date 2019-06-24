@@ -1,6 +1,6 @@
 package db
 
-var (
+const (
 	CreateUserQuery = `
 INSERT INTO tp_forum.users (nickname, email, fullname, about) 
 VALUES ($1, $2, $3, $4);`
@@ -22,7 +22,7 @@ WHERE lower(nickname) = lower($4)
 RETURNING nickname, fullname, about, email;`
 )
 
-var (
+const (
 	CreateForumQuery = `
 INSERT INTO tp_forum.forum (slug, title, author) 
 VALUES ($1, $2, (SELECT nickname FROM tp_forum.users WHERE lower(nickname) = lower($3))) 
@@ -34,7 +34,7 @@ FROM tp_forum.forum
 WHERE lower(slug) = lower($1);`
 )
 
-var (
+const (
 	CreateThreadQuery = `
 INSERT INTO tp_forum.thread (slug, author, created, forum, title, message)
 VALUES (
@@ -76,7 +76,7 @@ id, slug, author, created, forum, title, message, votes
 `
 )
 
-var (
+const (
 	SelectAllThreadsQuery = `
 	SELECT id, slug, author, created, forum, title, message, votes
 	FROM tp_forum.thread
@@ -136,4 +136,23 @@ var (
 	ORDER BY created DESC
 	LIMIT $3
 	`
+)
+
+const (
+	CreateVoteQuery = `
+	INSERT INTO tp_forum.vote (user_nickname, thread, vote_val)
+	VALUES ($1, $2, $3)
+	ON CONFLICT (user_nickname, thread)
+	DO UPDATE SET vote_val = EXCLUDED.vote_val;
+`
+
+	threadUpdateVotesCountQuery = `
+	UPDATE tp_forum.thread t
+	SET votes = (
+		SELECT SUM(vote_val)
+		FROM tp_forum.vote
+		WHERE thread=$1
+	)
+	WHERE id=$2
+	RETURNING votes`
 )

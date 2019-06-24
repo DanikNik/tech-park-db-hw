@@ -76,4 +76,22 @@ func ThreadUpdate(ctx *routing.Context) error {
 	return nil
 }
 
-func ThreadVote(ctx *routing.Context) error { return nil }
+func ThreadVote(ctx *routing.Context) error {
+	slugOrId := ctx.Param("slug_or_id")
+	voteData := models.Vote{}
+	json.Unmarshal(ctx.PostBody(), &voteData)
+	threadData, err := db.DoVote(slugOrId, voteData)
+	if err != nil {
+		if err == db.ErrNotFound {
+			ctx.SetStatusCode(fasthttp.StatusNotFound)
+			data, _ := json.Marshal(models.NewErrorMessage())
+			ctx.Write(data)
+			return nil
+		}
+		ctx.SetStatusCode(fasthttp.StatusInternalServerError)
+		return nil
+	}
+	data, _ := json.Marshal(threadData)
+	ctx.Write(data)
+	return nil
+}

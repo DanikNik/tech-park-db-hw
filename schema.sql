@@ -58,6 +58,14 @@ CREATE TABLE tp_forum.forum_user
     CONSTRAINT unique_forum_user UNIQUE (forum_slug, nickname)
 );
 
+-- CREATE UNIQUE INDEX forum_users_forum_id_nickname_index2
+--     ON forum_users (forumId, lower(nickname));
+--
+-- CREATE INDEX forum_users_covering_index2
+--     ON forum_users (forumId, lower(nickname), nickname, email, about, fullname);
+
+
+
 --
 -- THREAD
 --
@@ -85,7 +93,7 @@ CREATE FUNCTION thread_insert()
 $BODY$
 BEGIN
     UPDATE tp_forum.forum
-    SET threads = tp_forum.forum.threads + 1
+    SET threads = threads + 1
     WHERE lower(slug) = lower(NEW.forum);
     RETURN NULL;
 END;
@@ -137,7 +145,23 @@ CREATE TABLE tp_forum.post
     is_edited BOOLEAN                                     NOT NULL DEFAULT FALSE
 );
 
-
+CREATE FUNCTION post_insert()
+    RETURNS TRIGGER AS
+$BODY$
+BEGIN
+    UPDATE tp_forum.forum
+    SET posts = posts + 1
+    WHERE lower(slug) = lower((SELECT forum FROM tp_forum.thread WHERE id = NEW.thread));
+    RETURN NULL;
+END;
+$BODY$
+    LANGUAGE plpgsql;
+--
+CREATE TRIGGER on_post_insert
+    AFTER INSERT
+    ON tp_forum.post
+    FOR EACH ROW
+EXECUTE PROCEDURE post_insert();
 
 -- CREATE INDEX posts_thread_id_index
 --     ON post (thread_id, id);
@@ -162,21 +186,16 @@ CREATE TABLE tp_forum.post
 --
 CREATE TABLE tp_forum.vote
 (
-    id            SERIAL,
-
     user_nickname citext references tp_forum.users (nickname) NOT NULL,
-    thread_id     INTEGER REFERENCES tp_forum.thread (id)     NOT NULL,
+    thread        INTEGER REFERENCES tp_forum.thread (id)     NOT NULL,
 
     vote_val      INTEGER,
     prev_vote     INTEGER DEFAULT 0
---     CONSTRAINT unique_user_and_thread UNIQUE (user_id, thread_id)
 );
 
+CREATE UNIQUE INDEX user_thread_unique_index
+    ON tp_forum.vote (user_nickname, thread);
 
--- CREATE UNIQUE INDEX forum_users_forum_id_nickname_index2
---     ON forum_users (forumId, lower(nickname));
---
--- CREATE INDEX forum_users_covering_index2
---     ON forum_users (forumId, lower(nickname), nickname, email, about, fullname);
 
 TRUNCATE TABLE tp_forum.users, tp_forum.forum, tp_forum.thread, tp_forum.post, tp_forum.vote CASCADE;
+
