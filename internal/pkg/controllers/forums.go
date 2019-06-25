@@ -84,4 +84,25 @@ func ForumGetThreads(ctx *routing.Context) error {
 	return nil
 }
 
-func ForumGetUsers(ctx *routing.Context) error { return nil }
+func ForumGetUsers(ctx *routing.Context) error {
+	userList, err := db.GetUsersByForum(
+		ctx.Param("slug"),
+		ctx.QueryArgs().GetUintOrZero("limit"),
+		getBooleanFromQueryParam("desc", ctx.QueryArgs()),
+		string(ctx.QueryArgs().Peek("since")),
+	)
+
+	if err != nil {
+		if err == db.ErrNotFound {
+			ctx.SetStatusCode(fasthttp.StatusNotFound)
+			data, _ := json.Marshal(models.NewErrorMessage())
+			ctx.Write(data)
+			return nil
+		}
+	}
+
+	ctx.SetStatusCode(fasthttp.StatusOK)
+	data, _ := json.Marshal(&userList)
+	ctx.Write(data)
+	return nil
+}

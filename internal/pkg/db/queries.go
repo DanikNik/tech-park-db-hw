@@ -156,3 +156,14 @@ const (
 	WHERE id=$2
 	RETURNING votes`
 )
+
+const (
+	CreatePostsQuery = `
+	INSERT INTO tp_forum.post
+	(forum, thread, author, created, message, parent)
+	VALUES
+	($1, $2, $3, $4, $5, $6)
+	RETURNING
+	id, author, message, created, thread, forum, parent, is_edited 
+`
+)

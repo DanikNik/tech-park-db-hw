@@ -50,6 +50,7 @@ func CreateThread(threadData *models.Thread) error {
 		}
 		return err
 	}
+	increaseThreadCount()
 	return nil
 }
 

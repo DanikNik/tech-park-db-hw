@@ -9,7 +9,7 @@ CREATE EXTENSION IF NOT EXISTS CITEXT;
 --
 -- USERS
 --
-CREATE TABLE tp_forum.users
+CREATE UNLOGGED TABLE tp_forum.users
 (
     nickname CITEXT NOT NULL,
     email    CITEXT NOT NULL,
@@ -32,7 +32,7 @@ CREATE UNIQUE INDEX users_email_index
 --
 -- FORUM
 --
-CREATE TABLE tp_forum.forum
+CREATE UNLOGGED TABLE tp_forum.forum
 (
     id      SERIAL PRIMARY KEY,
     slug    CITEXT                                      NOT NULL,
@@ -51,11 +51,11 @@ CREATE UNIQUE INDEX forum_slug_index
 --
 -- CREATE INDEX on forum (slug, id, title, author, threads, posts);
 
-CREATE TABLE tp_forum.forum_user
+CREATE UNLOGGED TABLE tp_forum.forum_user
 (
-    nickname   citext COLLATE "POSIX" references tp_forum.users (nickname),
-    forum_slug citext references tp_forum.forum (slug),
-    CONSTRAINT unique_forum_user UNIQUE (forum_slug, nickname)
+    nickname citext COLLATE "POSIX" references tp_forum.users (nickname),
+    forum    citext references tp_forum.forum (slug),
+    CONSTRAINT unique_forum_user UNIQUE (forum, nickname)
 );
 
 -- CREATE UNIQUE INDEX forum_users_forum_id_nickname_index2
@@ -65,13 +65,12 @@ CREATE TABLE tp_forum.forum_user
 --     ON forum_users (forumId, lower(nickname), nickname, email, about, fullname);
 
 
-
 --
 -- THREAD
 --
 
 
-CREATE TABLE tp_forum.thread
+CREATE UNLOGGED TABLE tp_forum.thread
 (
     id      SERIAL PRIMARY KEY                          NOT NULL,
     slug    CITEXT                                               DEFAULT NULL,
@@ -106,6 +105,26 @@ CREATE TRIGGER on_thread_insert
     FOR EACH ROW
 EXECUTE PROCEDURE thread_insert();
 
+
+CREATE FUNCTION create_forum_user_on_thread_insert() returns trigger as
+$$
+BEGIN
+    INSERT INTO tp_forum.forum_user
+        (nickname, forum)
+    VALUES (NEW.author, NEW.forum)
+    ON CONFLICT DO NOTHING;
+    RETURN NULL;
+END;
+$$
+    LANGUAGE plpgsql;
+
+CREATE TRIGGER on_thread_create_forum_user
+    AFTER INSERT
+    ON tp_forum.thread
+    FOR EACH ROW
+EXECUTE PROCEDURE create_forum_user_on_thread_insert();
+
+
 CREATE UNIQUE INDEX thread_slug_index
     ON tp_forum.thread (slug);
 --
@@ -130,20 +149,44 @@ CREATE UNIQUE INDEX thread_slug_forum_slug_index
 --
 -- POST
 --
-CREATE TABLE tp_forum.post
+CREATE UNLOGGED TABLE tp_forum.post
 (
     id        SERIAL primary key,
 
-    author    citext REFERENCES tp_forum.users (nickname) NOT NULL,
+    author    citext REFERENCES tp_forum.users (nickname),
 
-    message   TEXT                                        NOT NULL,
+    message   TEXT,
     created   TIMESTAMPTZ,
 
-    thread    INTEGER REFERENCES tp_forum.thread (id)     NOT NULL,
+    thread    INTEGER REFERENCES tp_forum.thread (id),
+    forum     CITEXT REFERENCES tp_forum.forum (slug),
 
-    parent    INTEGER references tp_forum.post (id)                DEFAULT 0,
-    is_edited BOOLEAN                                     NOT NULL DEFAULT FALSE
+    parent    INTEGER references tp_forum.post (id) DEFAULT 0,
+    is_edited BOOLEAN                               DEFAULT FALSE,
+
+    path      integer[]
 );
+
+CREATE OR REPLACE FUNCTION create_path() RETURNS trigger as
+$create_path$
+BEGIN
+    IF NEW.parent = 0 THEN
+        NEW.path := (ARRAY [NEW.id]);
+        return NEW;
+    end if;
+
+    NEW.path := (SELECT array_append(p.path, NEW.id::integer)
+                 from tp_forum.post p
+                 where p.id = NEW.parent);
+    RETURN NEW;
+END;
+$create_path$ LANGUAGE plpgsql;
+
+CREATE TRIGGER create_path
+    BEFORE INSERT
+    ON tp_forum.post
+    FOR EACH ROW
+EXECUTE PROCEDURE create_path();
 
 CREATE FUNCTION post_insert()
     RETURNS TRIGGER AS
@@ -152,6 +195,12 @@ BEGIN
     UPDATE tp_forum.forum
     SET posts = posts + 1
     WHERE lower(slug) = lower((SELECT forum FROM tp_forum.thread WHERE id = NEW.thread));
+
+    INSERT INTO tp_forum.forum_user
+        (nickname, forum)
+    VALUES (NEW.author,
+            (SELECT forum FROM tp_forum.thread WHERE id = NEW.thread))
+    ON CONFLICT DO NOTHING;
     RETURN NULL;
 END;
 $BODY$
@@ -184,18 +233,19 @@ EXECUTE PROCEDURE post_insert();
 --
 -- VOTE
 --
-CREATE TABLE tp_forum.vote
+CREATE UNLOGGED TABLE tp_forum.vote
 (
     user_nickname citext references tp_forum.users (nickname) NOT NULL,
     thread        INTEGER REFERENCES tp_forum.thread (id)     NOT NULL,
 
-    vote_val      INTEGER,
-    prev_vote     INTEGER DEFAULT 0
+    vote_val      INTEGER
 );
 
 CREATE UNIQUE INDEX user_thread_unique_index
     ON tp_forum.vote (user_nickname, thread);
 
 
-TRUNCATE TABLE tp_forum.users, tp_forum.forum, tp_forum.thread, tp_forum.post, tp_forum.vote CASCADE;
+TRUNCATE TABLE tp_forum.users, tp_forum.forum, tp_forum.thread, tp_forum.post, tp_forum.vote, tp_forum.forum_user CASCADE;
 
+insert into tp_forum.post (id)
+values (0);

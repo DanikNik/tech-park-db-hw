@@ -25,6 +25,7 @@ func CreateForum(forum *models.Forum) error {
 			}
 		}
 	}
+	increaseForumCount()
 	return err
 }
 
@@ -105,4 +106,108 @@ func GetThreadsByForum(forumSlug string, limit int, desc bool, since string) (*[
 	}
 	return &ts, nil
 
+}
+
+const (
+	selectAllUsersByForum = `
+	SELECT u.nickname, u.fullname, u.about, u.email
+	FROM tp_forum.forum_user fu
+	JOIN tp_forum.users u ON lower(fu.nickname) = lower(u.nickname)
+	WHERE lower(fu.forum) = lower($1)
+	ORDER BY lower(fu.nickname)`
+
+	selectAllUsersByForumDesc = `
+	SELECT u.nickname, u.fullname, u.about, u.email
+	FROM tp_forum.forum_user fu
+	JOIN tp_forum.users u ON lower(fu.nickname) = lower(u.nickname)
+	WHERE lower(fu.forum) = lower($1)
+	ORDER BY lower(fu.nickname)`
+
+	selectAllUsersByForumLimit = `
+	SELECT u.nickname, u.fullname, u.about, u.email
+	FROM tp_forum.forum_user fu
+	JOIN tp_forum.users u ON lower(fu.nickname) = lower(u.nickname)
+	WHERE lower(fu.forum) = lower($1)
+	ORDER BY lower(fu.nickname)
+	LIMIT $2`
+
+	selectAllUsersByForumLimitDesc = `
+	SELECT u.nickname, u.fullname, u.about, u.email
+	FROM tp_forum.forum_user fu
+	JOIN tp_forum.users u ON lower(fu.nickname) = lower(u.nickname)
+	WHERE lower(fu.forum) = lower($1)
+	ORDER BY lower(fu.nickname) DESC
+	LIMIT $2`
+
+	selectAllUsersByForumLimitSince = `
+	SELECT u.nickname, u.fullname, u.about, u.email
+	FROM tp_forum.forum_user fu
+	JOIN tp_forum.users u ON lower(fu.nickname) = lower(u.nickname)
+	WHERE lower(fu.forum) = lower($1) AND lower(fu.nickname) > lower($2)
+	ORDER BY lower(fu.nickname)
+	LIMIT $3`
+
+	selectAllUsersByForumLimitSinceDesc = `
+	SELECT u.nickname, u.fullname, u.about, u.email
+	FROM tp_forum.forum_user fu
+	JOIN tp_forum.users u ON lower(fu.nickname) = lower(u.nickname)
+	WHERE lower(fu.forum) = lower($1) AND lower(fu.nickname) < lower($2)
+	ORDER BY lower(fu.nickname) DESC
+	LIMIT $3`
+
+	selectAllUsersByForumSince = `
+	SELECT u.nickname, u.fullname, u.about, u.email
+	FROM tp_forum.forum_user fu
+	JOIN tp_forum.users u ON lower(fu.nickname) = lower(u.nickname)
+	WHERE lower(fu.forum) = lower($1) AND lower(fu.nickname) > lower($2)
+	ORDER BY lower(fu.nickname)`
+
+	selectAllUsersByForumSinceDesc = `
+	SELECT u.nickname, u.fullname, u.about, u.email
+	FROM tp_forum.forum_user fu
+	JOIN tp_forum.users u ON lower(fu.nickname) = lower(u.nickname)
+	WHERE lower(fu.forum) = lower($1) AND lower(fu.nickname) < lower($2)
+	ORDER BY lower(fu.nickname) DESC`
+)
+
+func GetUsersByForum(slug string, limit int, desc bool, since string) (*[]models.User, error) {
+
+	if isExist, _ := checkForumExist(slug); !isExist {
+		return nil, ErrNotFound
+	}
+
+	var rows *pgx.Rows
+	if desc == true {
+		if since != "" && limit > 0 {
+			rows, _ = Query(selectAllUsersByForumLimitSinceDesc, slug, since, limit)
+		} else if since != "" {
+			rows, _ = Query(selectAllUsersByForumSinceDesc, slug, since)
+		} else if limit > 0 {
+			rows, _ = Query(selectAllUsersByForumLimitDesc, slug, limit)
+		} else {
+			rows, _ = Query(selectAllUsersByForumDesc, slug)
+		}
+	} else {
+		if since != "" && limit > 0 {
+			rows, _ = Query(selectAllUsersByForumLimitSince, slug, since, limit)
+		} else if since != "" {
+			rows, _ = Query(selectAllUsersByForumSince, slug, since)
+		} else if limit > 0 {
+			rows, _ = Query(selectAllUsersByForumLimit, slug, limit)
+		} else {
+			rows, _ = Query(selectAllUsersByForum, slug)
+		}
+	}
+	defer rows.Close()
+
+	userList := []models.User{}
+	for rows.Next() {
+		user := models.User{}
+		err := rows.Scan(&user.Nickname, &user.Fullname, &user.About, &user.Email)
+		if err != nil {
+			panic(err)
+		}
+		userList = append(userList, user)
+	}
+	return &userList, nil
 }

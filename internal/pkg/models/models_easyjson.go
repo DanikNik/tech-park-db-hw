@@ -562,13 +562,13 @@ func easyjsonD2b7633eDecodeTechParkDbHwInternalPkgModels5(in *jlexer.Lexer, out 
 		}
 		switch key {
 		case "user":
-			out.User = int(in.Int())
+			out.User = int32(in.Int32())
 		case "forum":
-			out.Forum = int(in.Int())
+			out.Forum = int32(in.Int32())
 		case "thread":
-			out.Thread = int(in.Int())
+			out.Thread = int32(in.Int32())
 		case "post":
-			out.Post = int(in.Int())
+			out.Post = int32(in.Int32())
 		default:
 			in.SkipRecursive()
 		}
@@ -591,7 +591,7 @@ func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels5(out *jwriter.Writer, i
 		} else {
 			out.RawString(prefix)
 		}
-		out.Int(int(in.User))
+		out.Int32(int32(in.User))
 	}
 	{
 		const prefix string = ",\"forum\":"
@@ -601,7 +601,7 @@ func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels5(out *jwriter.Writer, i
 		} else {
 			out.RawString(prefix)
 		}
-		out.Int(int(in.Forum))
+		out.Int32(int32(in.Forum))
 	}
 	{
 		const prefix string = ",\"thread\":"
@@ -611,7 +611,7 @@ func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels5(out *jwriter.Writer, i
 		} else {
 			out.RawString(prefix)
 		}
-		out.Int(int(in.Thread))
+		out.Int32(int32(in.Thread))
 	}
 	{
 		const prefix string = ",\"post\":"
@@ -621,7 +621,7 @@ func easyjsonD2b7633eEncodeTechParkDbHwInternalPkgModels5(out *jwriter.Writer, i
 		} else {
 			out.RawString(prefix)
 		}
-		out.Int(int(in.Post))
+		out.Int32(int32(in.Post))
 	}
 	out.RawByte('}')
 }

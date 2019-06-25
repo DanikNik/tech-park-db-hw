@@ -15,8 +15,9 @@ func CreateUser(user *models.User) error {
 				return ErrConflict
 			}
 		}
-		panic(err)
+		return err
 	}
+	increaseUserCount()
 	return err
 }
 

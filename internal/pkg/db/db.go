@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx"
 	_ "github.com/lib/pq"
+	"sync/atomic"
 	"time"
 )
 
@@ -77,7 +78,7 @@ func Exec(query string, args ...interface{}) (pgx.CommandTag, error) {
 	return dbObj.Exec(query, args...)
 }
 
-func truncate() error {
+func Truncate() error {
 	if dbObj == nil {
 		return NotInit
 	}
@@ -86,5 +87,31 @@ func truncate() error {
 	if err != nil {
 		return err
 	}
+	Exec("INSERT INTO post (id) VALUES (0)")
+	atomic.SwapInt32(&forumCount, 0)
+	atomic.SwapInt32(&threadCount, 0)
+	atomic.SwapInt32(&postCount, 0)
+	atomic.SwapInt32(&userCount, 0)
 	return nil
+}
+
+var forumCount int32
+var threadCount int32
+var postCount int32
+var userCount int32
+
+func increaseForumCount() {
+	atomic.AddInt32(&forumCount, 1)
+}
+
+func increaseThreadCount() {
+	atomic.AddInt32(&threadCount, 1)
+}
+
+func increaseUserCount() {
+	atomic.AddInt32(&userCount, 1)
+}
+
+func increasePostCount(count int32) {
+	atomic.AddInt32(&postCount, count)
 }
