@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/jackc/pgx"
 	_ "github.com/lib/pq"
-	"sync/atomic"
 	"time"
 )
 

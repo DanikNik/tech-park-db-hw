@@ -106,7 +106,7 @@ CREATE TRIGGER on_thread_insert
 EXECUTE PROCEDURE thread_insert();
 
 
-CREATE FUNCTION create_forum_user_on_thread_insert() returns trigger as
+CREATE OR REPLACE FUNCTION create_forum_user_on_thread_insert() returns trigger as
 $$
 BEGIN
     INSERT INTO tp_forum.forum_user
@@ -177,9 +177,9 @@ BEGIN
 END;
 $change_edited_post$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS change_edited_post ON post;
+DROP TRIGGER IF EXISTS change_edited_post ON tp_forum.post;
 
-CREATE TRIGGER change_edited_post BEFORE UPDATE ON post
+CREATE TRIGGER change_edited_post BEFORE UPDATE ON tp_forum.post
   FOR EACH ROW EXECUTE PROCEDURE change_edited_post();
 
 CREATE OR REPLACE FUNCTION create_path() RETURNS trigger as
@@ -203,7 +203,7 @@ CREATE TRIGGER create_path
     FOR EACH ROW
 EXECUTE PROCEDURE create_path();
 
-CREATE FUNCTION post_insert()
+CREATE OR REPLACE FUNCTION post_insert()
     RETURNS TRIGGER AS
 $BODY$
 BEGIN

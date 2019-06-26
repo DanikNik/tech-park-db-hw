@@ -56,7 +56,28 @@ func ThreadGetOne(ctx *routing.Context) error {
 	return nil
 }
 
-func ThreadGetPosts(ctx *routing.Context) error { return nil }
+func ThreadGetPosts(ctx *routing.Context) error {
+
+	posts := []*models.Post{}
+
+	err := db.SelectAllPostsByThread(ctx.Param("slug_or_id"),
+		ctx.QueryArgs().GetUintOrZero("limit"), getBooleanFromQueryParam("desc", ctx.QueryArgs()),
+		ctx.QueryArgs().GetUintOrZero("since"),
+		string(ctx.QueryArgs().Peek("sort")), &posts)
+
+	if err == db.ErrNotFound {
+		ctx.SetStatusCode(fasthttp.StatusNotFound)
+		data, _ := json.Marshal(models.NewErrorMessage())
+		ctx.Write(data)
+		return nil
+	}
+
+	ctx.SetStatusCode(fasthttp.StatusOK)
+	data, _ := json.Marshal(&posts)
+	ctx.Write(data)
+
+	return nil
+}
 
 func ThreadUpdate(ctx *routing.Context) error {
 	threadSlugOrId := ctx.Param("slug_or_id")
