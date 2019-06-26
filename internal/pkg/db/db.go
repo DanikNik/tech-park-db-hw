@@ -87,7 +87,7 @@ func Truncate() error {
 	if err != nil {
 		return err
 	}
-	Exec("INSERT INTO post (id) VALUES (0)")
+	Exec("INSERT INTO tp_forum.post (id) VALUES (0)")
 	atomic.SwapInt32(&forumCount, 0)
 	atomic.SwapInt32(&threadCount, 0)
 	atomic.SwapInt32(&postCount, 0)

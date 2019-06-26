@@ -151,7 +151,7 @@ CREATE UNIQUE INDEX thread_slug_forum_slug_index
 --
 CREATE UNLOGGED TABLE tp_forum.post
 (
-    id        SERIAL primary key,
+    id        BIGSERIAL primary key,
 
     author    citext REFERENCES tp_forum.users (nickname),
 
@@ -166,6 +166,21 @@ CREATE UNLOGGED TABLE tp_forum.post
 
     path      integer[]
 );
+
+CREATE OR REPLACE FUNCTION change_edited_post() RETURNS trigger as $change_edited_post$
+BEGIN
+  IF NEW.message <> OLD.message THEN
+    NEW.is_edited = true;
+  END IF;
+
+  return NEW;
+END;
+$change_edited_post$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS change_edited_post ON post;
+
+CREATE TRIGGER change_edited_post BEFORE UPDATE ON post
+  FOR EACH ROW EXECUTE PROCEDURE change_edited_post();
 
 CREATE OR REPLACE FUNCTION create_path() RETURNS trigger as
 $create_path$

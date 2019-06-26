@@ -166,4 +166,9 @@ const (
 	RETURNING
 	id, author, message, created, thread, forum, parent, is_edited 
 `
+	UpdatePostMessageQuery = `
+	UPDATE tp_forum.post
+	SET message = $1
+	WHERE id = $2	
+	RETURNING id, author, created, is_edited, message, parent, thread, forum`
 )

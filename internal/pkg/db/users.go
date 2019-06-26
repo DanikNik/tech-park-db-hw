@@ -23,7 +23,6 @@ func CreateUser(user *models.User) error {
 
 func SelectUsersOnConflict(nickname, email string) ([]models.User, error) {
 	rows, err := dbObj.Query(SelectUsersWithNickOrEmail, nickname, email)
-	fmt.Printf("%+v", rows)
 	if err != nil {
 		return nil, err
 	}
