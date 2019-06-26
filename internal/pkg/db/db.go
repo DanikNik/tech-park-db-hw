@@ -28,7 +28,7 @@ func Open() (err error) {
 		User:              "postgres",
 		Password:          "postgres",
 		Host:              "localhost",
-		Port:              32768,
+		Port:              5432,
 		Database:          "tech-db-forum",
 		TLSConfig:         nil,
 		UseFallbackTLS:    false,
