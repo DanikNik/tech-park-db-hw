@@ -85,10 +85,6 @@ func CreatePostsBulk(slugOrId string, posts []models.Post) (*[]models.Post, erro
 	return &resultPosts, nil
 }
 
-func GetPost(id int) (*models.PostFull, error) {
-	return nil, nil
-}
-
 func SelectPostFull(related []string, pf *models.PostFull) error {
 	isIncludeUser, isIncludeForum, isIncludeThread := false, false, false
 	for _, rel := range related {
