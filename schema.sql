@@ -27,7 +27,7 @@ CREATE UNIQUE INDEX users_nickname_index
 CREATE UNIQUE INDEX users_email_index
     ON tp_forum.users (email);
 --
-CREATE INDEX ON users (nickname, email);
+CREATE INDEX ON tp_forum.users (nickname, email);
 
 --
 -- FORUM
@@ -228,27 +228,27 @@ CREATE TRIGGER on_post_insert
     FOR EACH ROW
 EXECUTE PROCEDURE post_insert();
 
-CREATE INDEX posts_thread_id_index
-    ON tp_forum.post (thread, id);
---
-CREATE INDEX posts_thread_id_index2
-    ON tp_forum.post (thread);
---
-CREATE INDEX posts_thread_path_index
-    ON tp_forum.post (thread, path);
+-- CREATE INDEX posts_thread_id_index
+--     ON tp_forum.post (thread, id);
 
-CREATE INDEX posts_thread_parent_id_index
-    ON tp_forum.post (thread, parent, id);
+-- CREATE INDEX posts_thread_id_index2
+--     ON tp_forum.post (thread);
+
+-- CREATE INDEX posts_thread_path_index
+--     ON tp_forum.post (thread, path);
 --
-CREATE INDEX parent_tree_index
-    ON tp_forum.post ((path[0]), path DESC, id);
---
-CREATE INDEX parent_tree_index2
-    ON post (id, (path[0]));
---
---
+-- CREATE INDEX posts_thread_parent_id_index
+--     ON tp_forum.post (thread, parent, id);
+
+-- CREATE INDEX parent_tree_index
+--     ON tp_forum.post ((path[0]), path DESC, id);
+
+-- CREATE INDEX parent_tree_index2
+--     ON tp_forum.post (id, (path[0]));
+
+
 -- VOTE
---
+
 CREATE UNLOGGED TABLE tp_forum.vote
 (
     user_nickname citext references tp_forum.users (nickname) NOT NULL,
