@@ -30,6 +30,8 @@ const (
 
 const valuesFormatString = "('%s', %d, '%s', '%s', '%s', %v)"
 
+const forumIncreasePostsQuery = `UPDATE tp_forum.forum SET posts = posts + $1 where lower(slug) = lower($2)`
+
 func CreatePostsBulk(slugOrId string, posts *models.Posts) (*models.Posts, error) {
 	var err error
 	var threadId int
@@ -59,14 +61,14 @@ func CreatePostsBulk(slugOrId string, posts *models.Posts) (*models.Posts, error
 	for _, post := range *posts {
 		if post.Parent != 0 {
 			var parentThread int
-			dbObj.QueryRow(getParentThreadQuery, post.Parent).Scan(&parentThread)
+			tx.QueryRow(getParentThreadQuery, post.Parent).Scan(&parentThread)
 			if parentThread != threadId {
 				tx.Rollback()
 				return nil, ErrConflict
 			}
 		}
 
-		err = dbObj.QueryRow("SELECT FROM tp_forum.users WHERE nickname=$1", post.Author).Scan()
+		err = tx.QueryRow("SELECT FROM tp_forum.users WHERE nickname=$1", post.Author).Scan()
 		if err == pgx.ErrNoRows {
 			tx.Rollback()
 			return nil, ErrNotFound
@@ -123,6 +125,7 @@ func CreatePostsBulk(slugOrId string, posts *models.Posts) (*models.Posts, error
 		resultPosts = append(resultPosts, &newPost)
 	}
 
+	tx.Exec(forumIncreasePostsQuery, len(*posts), threadForum)
 	tx.Commit()
 	increasePostCount(int32(len(resultPosts)))
 

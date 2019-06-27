@@ -204,9 +204,9 @@ CREATE OR REPLACE FUNCTION post_insert()
     RETURNS TRIGGER AS
 $BODY$
 BEGIN
-    UPDATE tp_forum.forum
-    SET posts = posts + 1
-    WHERE lower(slug) = lower((SELECT forum FROM tp_forum.thread WHERE id = NEW.thread));
+--     UPDATE tp_forum.forum
+--     SET posts = posts + 1
+--     WHERE lower(slug) = lower((SELECT forum FROM tp_forum.thread WHERE id = NEW.thread));
 
     IF NEW.id = 0 THEN
         return null;
