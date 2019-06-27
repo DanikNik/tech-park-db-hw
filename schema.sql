@@ -240,11 +240,11 @@ EXECUTE PROCEDURE post_insert();
 -- CREATE INDEX posts_thread_parent_id_index
 --     ON tp_forum.post (thread, parent, id);
 
--- CREATE INDEX parent_tree_index
---     ON tp_forum.post ((path[0]), path DESC, id);
+CREATE INDEX parent_tree_index
+    ON tp_forum.post ((path[1]), path DESC, id);
 
--- CREATE INDEX parent_tree_index2
---     ON tp_forum.post (id, (path[0]));
+CREATE INDEX parent_tree_index2
+    ON tp_forum.post (id, (path[1]));
 
 
 -- VOTE

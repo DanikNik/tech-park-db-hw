@@ -2,7 +2,9 @@ package db
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/jackc/pgx"
+	"strings"
 	"tech-park-db-hw/internal/pkg/models"
 	"time"
 )
@@ -25,6 +27,8 @@ const (
 	WHERE lower(slug) = lower($1)
 `
 )
+
+const valuesFormatString = "('%s', %d, '%s', '%s', '%s', %v)"
 
 func CreatePostsBulk(slugOrId string, posts *models.Posts) (*models.Posts, error) {
 	var err error
@@ -49,20 +53,47 @@ func CreatePostsBulk(slugOrId string, posts *models.Posts) (*models.Posts, error
 	}
 
 	tx, _ := dbObj.Begin()
-	creationTime := time.Now()
+	creationTime := time.Now().Format(time.RFC3339)
 
+	queryValues := []string{}
 	for _, post := range *posts {
-		newPost := models.Post{}
-		row := tx.QueryRow(
-			CreatePostsQuery,
+		if post.Parent != 0 {
+			var parentThread int
+			dbObj.QueryRow(getParentThreadQuery, post.Parent).Scan(&parentThread)
+			if parentThread != threadId {
+				tx.Rollback()
+				return nil, ErrConflict
+			}
+		}
+
+		err = dbObj.QueryRow("SELECT FROM tp_forum.users WHERE nickname=$1", post.Author).Scan()
+		if err == pgx.ErrNoRows {
+			tx.Rollback()
+			return nil, ErrNotFound
+		}
+
+		//newPost := models.Post{}
+		queryValues = append(queryValues, fmt.Sprintf(
+			valuesFormatString,
 			threadForum,
 			threadId,
 			post.Author,
 			creationTime,
 			post.Message,
 			post.Parent,
-		)
-		err := row.Scan(
+		))
+	}
+	finalQueryBase := fmt.Sprintf(CreatePostsQueryBase, strings.Join(queryValues, ", "))
+
+	rows, err := tx.Query(finalQueryBase)
+	if err != nil {
+		panic(err)
+	}
+
+	defer rows.Close()
+	for rows.Next() {
+		newPost := models.Post{}
+		err := rows.Scan(
 			&newPost.Id,
 			&newPost.Author,
 			&newPost.Message,
@@ -72,15 +103,6 @@ func CreatePostsBulk(slugOrId string, posts *models.Posts) (*models.Posts, error
 			&newPost.Parent,
 			&newPost.IsEdited,
 		)
-
-		if newPost.Parent != 0 {
-			var parentThread int
-			tx.QueryRow(getParentThreadQuery, newPost.Parent).Scan(&parentThread)
-			if parentThread != newPost.Thread {
-				tx.Rollback()
-				return nil, ErrConflict
-			}
-		}
 
 		if err != nil {
 			tx.Rollback()

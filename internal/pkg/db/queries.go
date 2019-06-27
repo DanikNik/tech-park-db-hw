@@ -158,11 +158,11 @@ const (
 )
 
 const (
-	CreatePostsQuery = `
+	CreatePostsQueryBase = `
 	INSERT INTO tp_forum.post
 	(forum, thread, author, created, message, parent)
 	VALUES
-	($1, $2, $3, $4, $5, $6)
+	%s
 	RETURNING
 	id, author, message, created, thread, forum, parent, is_edited 
 `
