@@ -46,9 +46,8 @@ func UserGetOne(ctx *routing.Context) error {
 	nick := ctx.Param("nickname")
 	userData, err := db.GetUser(nick)
 	if err == db.ErrNotFound {
-		msg, _ := json.Marshal(models.NewErrorMessage())
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
-		ctx.Write(msg)
+		ctx.Write(models.ErrorByteMessage)
 		return nil
 	}
 	ctx.SetStatusCode(fasthttp.StatusOK)
@@ -69,14 +68,12 @@ func UserUpdate(ctx *routing.Context) error {
 	if err != nil {
 		switch err {
 		case db.ErrNotFound:
-			msg, _ := json.Marshal(models.NewErrorMessage())
 			ctx.SetStatusCode(fasthttp.StatusNotFound)
-			ctx.Write(msg)
+			ctx.Write(models.ErrorByteMessage)
 			return nil
 		case db.ErrConflict:
-			msg, _ := json.Marshal(models.NewErrorMessage())
 			ctx.SetStatusCode(fasthttp.StatusConflict)
-			ctx.Write(msg)
+			ctx.Write(models.ErrorByteMessage)
 			return nil
 		}
 	}

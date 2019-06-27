@@ -31,3 +31,5 @@ type Thread struct {
 	// Дата создания ветки на форуме.
 	Created time.Time `json:"created,omitempty"`
 }
+
+type Threads []*Thread

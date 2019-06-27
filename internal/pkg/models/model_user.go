@@ -15,3 +15,5 @@ type User struct {
 	// Почтовый адрес пользователя (уникальное поле).
 	Email string `json:"email"`
 }
+
+type Users []*User

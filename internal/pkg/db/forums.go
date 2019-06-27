@@ -60,7 +60,7 @@ func checkForumExist(slug string) (bool, error) {
 	return true, nil
 }
 
-func GetThreadsByForum(forumSlug string, limit int, desc bool, since string) (*[]models.Thread, error) {
+func GetThreadsByForum(forumSlug string, limit int, desc bool, since string) (*models.Threads, error) {
 	if isExist, _ := checkForumExist(forumSlug); !isExist {
 		return nil, ErrNotFound
 	}
@@ -90,7 +90,7 @@ func GetThreadsByForum(forumSlug string, limit int, desc bool, since string) (*[
 
 	defer rows.Close()
 
-	ts := []models.Thread{}
+	threadList := models.Threads{}
 	for rows.Next() {
 		threadData := models.Thread{}
 		slug := sql.NullString{}
@@ -102,9 +102,9 @@ func GetThreadsByForum(forumSlug string, limit int, desc bool, since string) (*[
 			threadData.Slug = slug.String
 		}
 
-		ts = append(ts, threadData)
+		threadList = append(threadList, &threadData)
 	}
-	return &ts, nil
+	return &threadList, nil
 
 }
 
@@ -170,7 +170,7 @@ const (
 	ORDER BY lower(fu.nickname) DESC`
 )
 
-func GetUsersByForum(slug string, limit int, desc bool, since string) (*[]models.User, error) {
+func GetUsersByForum(slug string, limit int, desc bool, since string) (*models.Users, error) {
 
 	if isExist, _ := checkForumExist(slug); !isExist {
 		return nil, ErrNotFound
@@ -200,14 +200,14 @@ func GetUsersByForum(slug string, limit int, desc bool, since string) (*[]models
 	}
 	defer rows.Close()
 
-	userList := []models.User{}
+	userList := models.Users{}
 	for rows.Next() {
 		user := models.User{}
 		err := rows.Scan(&user.Nickname, &user.Fullname, &user.About, &user.Email)
 		if err != nil {
 			panic(err)
 		}
-		userList = append(userList, user)
+		userList = append(userList, &user)
 	}
 	return &userList, nil
 }

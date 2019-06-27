@@ -18,8 +18,7 @@ func ThreadCreate(ctx *routing.Context) error {
 	if err != nil {
 		if err == db.ErrNotFound {
 			ctx.SetStatusCode(fasthttp.StatusNotFound)
-			data, _ := json.Marshal(models.NewErrorMessage())
-			ctx.Write(data)
+			ctx.Write(models.ErrorByteMessage)
 			return nil
 		} else if err == db.ErrConflict {
 			ctx.SetStatusCode(fasthttp.StatusConflict)
@@ -46,8 +45,7 @@ func ThreadGetOne(ctx *routing.Context) error {
 	if err != nil {
 		if err == db.ErrNotFound {
 			ctx.SetStatusCode(fasthttp.StatusNotFound)
-			data, _ := json.Marshal(models.NewErrorMessage())
-			ctx.Write(data)
+			ctx.Write(models.ErrorByteMessage)
 			return nil
 		} else {
 			ctx.SetStatusCode(500)
@@ -62,7 +60,7 @@ func ThreadGetOne(ctx *routing.Context) error {
 
 func ThreadGetPosts(ctx *routing.Context) error {
 
-	posts := []*models.Post{}
+	posts := models.Posts{}
 
 	err := db.GetPostsByThread(ctx.Param("slug_or_id"),
 		ctx.QueryArgs().GetUintOrZero("limit"), getBooleanFromQueryParam("desc", ctx.QueryArgs()),
@@ -71,8 +69,7 @@ func ThreadGetPosts(ctx *routing.Context) error {
 
 	if err == db.ErrNotFound {
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
-		data, _ := json.Marshal(models.NewErrorMessage())
-		ctx.Write(data)
+		ctx.Write(models.ErrorByteMessage)
 		return nil
 	}
 
@@ -91,8 +88,7 @@ func ThreadUpdate(ctx *routing.Context) error {
 	if err != nil {
 		if err == db.ErrNotFound {
 			ctx.SetStatusCode(fasthttp.StatusNotFound)
-			data, _ := json.Marshal(models.NewErrorMessage())
-			ctx.Write(data)
+			ctx.Write(models.ErrorByteMessage)
 			return nil
 		}
 	}
@@ -109,8 +105,7 @@ func ThreadVote(ctx *routing.Context) error {
 	if err != nil {
 		if err == db.ErrNotFound {
 			ctx.SetStatusCode(fasthttp.StatusNotFound)
-			data, _ := json.Marshal(models.NewErrorMessage())
-			ctx.Write(data)
+			ctx.Write(models.ErrorByteMessage)
 			return nil
 		}
 		ctx.SetStatusCode(fasthttp.StatusInternalServerError)

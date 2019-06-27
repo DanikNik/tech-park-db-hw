@@ -25,8 +25,7 @@ func PostGetOne(ctx *routing.Context) error {
 	err := db.GetPostFullData(strings.Split(string(related), ","), postFull)
 	if err == db.ErrNotFound {
 		ctx.SetStatusCode(http.StatusNotFound)
-		data, _ := json.Marshal(models.NewErrorMessage())
-		ctx.Write(data)
+		ctx.Write(models.ErrorByteMessage)
 		return nil
 	}
 	data, _ := json.Marshal(postFull)
@@ -44,8 +43,7 @@ func PostUpdate(ctx *routing.Context) error {
 	err := db.UpdatePost(post, pU)
 	if err == db.ErrNotFound {
 		ctx.SetStatusCode(http.StatusNotFound)
-		data, _ := json.Marshal(models.NewErrorMessage())
-		ctx.Write(data)
+		ctx.Write(models.ErrorByteMessage)
 		return nil
 	}
 	ctx.SetStatusCode(fasthttp.StatusOK)
@@ -57,9 +55,9 @@ func PostUpdate(ctx *routing.Context) error {
 
 func PostsCreate(ctx *routing.Context) error {
 	slugOrId := ctx.Param("slug_or_id")
-	posts := []models.Post{}
+	posts := models.Posts{}
 	json.Unmarshal(ctx.PostBody(), &posts)
-	newPosts, err := db.CreatePostsBulk(slugOrId, posts)
+	newPosts, err := db.CreatePostsBulk(slugOrId, &posts)
 	if err != nil {
 		if err == db.ErrNotFound {
 			ctx.SetStatusCode(http.StatusNotFound)
@@ -69,8 +67,7 @@ func PostsCreate(ctx *routing.Context) error {
 			ctx.SetStatusCode(http.StatusInternalServerError)
 			return nil
 		}
-		data, _ := json.Marshal(models.NewErrorMessage())
-		ctx.Write(data)
+		ctx.Write(models.ErrorByteMessage)
 		return nil
 	}
 	ctx.SetStatusCode(http.StatusCreated)

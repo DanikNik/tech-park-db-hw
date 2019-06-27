@@ -23,8 +23,7 @@ func ForumCreate(ctx *routing.Context) error {
 	switch err {
 	case db.ErrNotFound:
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
-		data, _ := json.Marshal(models.NewErrorMessage())
-		ctx.Write(data)
+		ctx.Write(models.ErrorByteMessage)
 		return nil
 	case db.ErrConflict:
 		existingForum, err := db.GetForum(forumData.Slug)
@@ -50,8 +49,7 @@ func ForumGetOne(ctx *routing.Context) error {
 	if err != nil {
 		if err == db.ErrNotFound {
 			ctx.SetStatusCode(fasthttp.StatusNotFound)
-			data, _ := json.Marshal(models.NewErrorMessage())
-			ctx.Write(data)
+			ctx.Write(models.ErrorByteMessage)
 			return nil
 		} else {
 			ctx.SetStatusCode(fasthttp.StatusInternalServerError)
@@ -74,8 +72,7 @@ func ForumGetThreads(ctx *routing.Context) error {
 
 	if err == db.ErrNotFound {
 		ctx.SetStatusCode(fasthttp.StatusNotFound)
-		data, _ := json.Marshal(models.NewErrorMessage())
-		ctx.Write(data)
+		ctx.Write(models.ErrorByteMessage)
 		return nil
 	}
 	data, _ := json.Marshal(threads)
@@ -95,8 +92,7 @@ func ForumGetUsers(ctx *routing.Context) error {
 	if err != nil {
 		if err == db.ErrNotFound {
 			ctx.SetStatusCode(fasthttp.StatusNotFound)
-			data, _ := json.Marshal(models.NewErrorMessage())
-			ctx.Write(data)
+			ctx.Write(models.ErrorByteMessage)
 			return nil
 		}
 	}

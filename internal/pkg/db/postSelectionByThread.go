@@ -32,7 +32,7 @@ func threadGetId(slug string) (int, bool, error) {
 }
 
 func GetPostsByThread(slugOrId string, limit int, desc bool,
-	since int, sort string, posts *[]*models.Post) error {
+	since int, sort string, posts *models.Posts) error {
 
 	flag := false
 	threadID := 0
@@ -51,7 +51,7 @@ func GetPostsByThread(slugOrId string, limit int, desc bool,
 }
 
 func getPostsByThreadId(id int, limit int, desc bool,
-	since int, sort string, posts *[]*models.Post) error {
+	since int, sort string, posts *models.Posts) error {
 
 	rows, _ := doQuery(id, limit, desc, since, sort)
 	defer rows.Close()

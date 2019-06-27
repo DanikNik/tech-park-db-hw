@@ -136,8 +136,8 @@ CREATE UNIQUE INDEX thread_id_forum_slug_index
 CREATE UNIQUE INDEX thread_slug_forum_slug_index
     ON tp_forum.thread (slug, forum);
 --
-CREATE UNIQUE INDEX thread_covering_index
-    ON thread (forum, created, id, slug, title, message, forum, author, created, votes);
+-- CREATE UNIQUE INDEX thread_covering_index
+--     ON thread (forum, created, id, slug, title, message, forum, author, created, votes);
 
 --
 -- POST
@@ -236,6 +236,9 @@ CREATE INDEX posts_thread_id_index2
 --
 CREATE INDEX posts_thread_path_index
     ON tp_forum.post (thread, path);
+
+CREATE INDEX posts_thread_parent_id_index
+    ON tp_forum.post (thread, parent, id);
 --
 CREATE INDEX parent_tree_index
     ON tp_forum.post ((path[0]), path DESC, id);

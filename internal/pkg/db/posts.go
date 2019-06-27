@@ -13,31 +13,50 @@ const (
 	FROM tp_forum.post
 	WHERE id = $1
 `
+
+	getForumIdFromThreadById = `
+	SELECT id, forum
+	FROM tp_forum.thread
+	WHERE id = $1
+`
+	getForumIdFromThreadBySlug = `
+	SELECT id, forum
+	FROM tp_forum.thread
+	WHERE lower(slug) = lower($1)
+`
 )
 
-func CreatePostsBulk(slugOrId string, posts []models.Post) (*[]models.Post, error) {
-	threadData, err := GetThread(slugOrId)
+func CreatePostsBulk(slugOrId string, posts *models.Posts) (*models.Posts, error) {
+	var err error
+	var threadId int
+	var threadForum string
+	potId, flag := isIdOrSlug(slugOrId)
+	if flag {
+		err = dbObj.QueryRow(getForumIdFromThreadById, potId).Scan(&threadId, &threadForum)
+	} else {
+		err = dbObj.QueryRow(getForumIdFromThreadBySlug, slugOrId).Scan(&threadId, &threadForum)
+	}
 	if err != nil {
-		if err == ErrNotFound {
+		if err == pgx.ErrNoRows {
 			return nil, ErrNotFound
 		}
 		return nil, err
 	}
 
-	resultPosts := []models.Post{}
-	if posts == nil || len(posts) == 0 {
+	resultPosts := models.Posts{}
+	if posts == nil || len(*posts) == 0 {
 		return &resultPosts, nil
 	}
 
 	tx, _ := dbObj.Begin()
 	creationTime := time.Now()
 
-	for _, post := range posts {
+	for _, post := range *posts {
 		newPost := models.Post{}
 		row := tx.QueryRow(
 			CreatePostsQuery,
-			threadData.Forum,
-			threadData.Id,
+			threadForum,
+			threadId,
 			post.Author,
 			creationTime,
 			post.Message,
@@ -79,7 +98,7 @@ func CreatePostsBulk(slugOrId string, posts []models.Post) (*[]models.Post, erro
 			}
 			return nil, err
 		}
-		resultPosts = append(resultPosts, newPost)
+		resultPosts = append(resultPosts, &newPost)
 	}
 
 	tx.Commit()
