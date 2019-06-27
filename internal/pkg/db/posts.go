@@ -125,7 +125,10 @@ func CreatePostsBulk(slugOrId string, posts *models.Posts) (*models.Posts, error
 		resultPosts = append(resultPosts, &newPost)
 	}
 
-	tx.Exec(forumIncreasePostsQuery, len(*posts), threadForum)
+	_, err = tx.Exec(forumIncreasePostsQuery, len(resultPosts), threadForum)
+	if err != nil {
+		panic(err)
+	}
 	tx.Commit()
 	increasePostCount(int32(len(resultPosts)))
 
