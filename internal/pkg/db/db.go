@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/jackc/pgx"
 	_ "github.com/lib/pq"
+	"os"
 	"time"
 )
 
@@ -24,11 +25,17 @@ const (
 )
 
 func Open() (err error) {
+
+	port := 5432
+	if os.Getenv("TP_DB_DEVELOPMENT") == "true" {
+		port = 32768
+	}
+
 	connConfig := pgx.ConnConfig{
 		User:              "postgres",
 		Password:          "postgres",
 		Host:              "localhost",
-		Port:              5432,
+		Port:              uint16(port),
 		Database:          "tech-db-forum",
 		TLSConfig:         nil,
 		UseFallbackTLS:    false,

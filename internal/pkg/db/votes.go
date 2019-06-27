@@ -11,6 +11,7 @@ func DoVote(threadSlugOrId string, vote models.Vote) (*models.Thread, error) {
 		if err == ErrNotFound {
 			return nil, err
 		}
+		return nil, err
 	}
 
 	_, err = Exec(CreateVoteQuery, vote.Nickname, threadData.Id, vote.Voice)

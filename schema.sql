@@ -18,8 +18,8 @@ CREATE UNLOGGED TABLE tp_forum.users
     fullname TEXT   NOT NULL
 );
 
--- CREATE INDEX users_covering_index
---   ON users (nickname, email, about, fullname);
+CREATE INDEX users_covering_index
+    ON tp_forum.users (nickname, email, about, fullname);
 --
 CREATE UNIQUE INDEX users_nickname_index
     ON tp_forum.users (nickname);
@@ -27,14 +27,14 @@ CREATE UNIQUE INDEX users_nickname_index
 CREATE UNIQUE INDEX users_email_index
     ON tp_forum.users (email);
 --
--- CREATE INDEX ON users (nickname, email);
+CREATE INDEX ON users (nickname, email);
 
 --
 -- FORUM
 --
 CREATE UNLOGGED TABLE tp_forum.forum
 (
-    id      SERIAL PRIMARY KEY,
+    id      BIGSERIAL PRIMARY KEY,
     slug    CITEXT                                      NOT NULL,
     title   TEXT                                        NOT NULL,
 
@@ -46,10 +46,10 @@ CREATE UNLOGGED TABLE tp_forum.forum
 CREATE UNIQUE INDEX forum_slug_index
     ON tp_forum.forum (slug);
 --
--- CREATE INDEX forum_slug_id_index
---     ON forum (slug, id);
+CREATE INDEX forum_slug_id_index
+    ON forum (slug, id);
 --
--- CREATE INDEX on forum (slug, id, title, author, threads, posts);
+CREATE INDEX on forum (slug, id, title, author, threads, posts);
 
 CREATE UNLOGGED TABLE tp_forum.forum_user
 (
@@ -58,13 +58,6 @@ CREATE UNLOGGED TABLE tp_forum.forum_user
     CONSTRAINT unique_forum_user UNIQUE (forum, nickname)
 );
 
--- CREATE UNIQUE INDEX forum_users_forum_id_nickname_index2
---     ON forum_users (forumId, lower(nickname));
---
--- CREATE INDEX forum_users_covering_index2
---     ON forum_users (forumId, lower(nickname), nickname, email, about, fullname);
-
-
 --
 -- THREAD
 --
@@ -72,7 +65,7 @@ CREATE UNLOGGED TABLE tp_forum.forum_user
 
 CREATE UNLOGGED TABLE tp_forum.thread
 (
-    id      SERIAL PRIMARY KEY                          NOT NULL,
+    id      BIGSERIAL PRIMARY KEY                       NOT NULL,
     slug    CITEXT                                               DEFAULT NULL,
 
     title   TEXT                                        NOT NULL,
@@ -84,7 +77,7 @@ CREATE UNLOGGED TABLE tp_forum.thread
 
     created TIMESTAMPTZ,
 
-    votes   INTEGER                                     NOT NULL DEFAULT 0
+    votes   BIGINT                                      NOT NULL DEFAULT 0
 );
 
 CREATE FUNCTION thread_insert()
@@ -128,14 +121,14 @@ EXECUTE PROCEDURE create_forum_user_on_thread_insert();
 CREATE UNIQUE INDEX thread_slug_index
     ON tp_forum.thread (slug);
 --
--- CREATE INDEX thread_slug_id_index
---     ON thread (slug, id);
+CREATE INDEX thread_slug_id_index
+    ON tp_forum.thread (slug, id);
 --
--- CREATE INDEX thread_forum_id_created_index
---     ON thread (forum_id, created);
+CREATE INDEX thread_forum_id_created_index
+    ON tp_forum.thread (forum, created);
 --
--- CREATE INDEX thread_forum_id_created_index2
---     ON thread (forum_id, created DESC);
+CREATE INDEX thread_forum_id_created_index2
+    ON tp_forum.thread (forum, created DESC);
 --
 CREATE UNIQUE INDEX thread_id_forum_slug_index
     ON tp_forum.thread (id, forum);
@@ -143,8 +136,8 @@ CREATE UNIQUE INDEX thread_id_forum_slug_index
 CREATE UNIQUE INDEX thread_slug_forum_slug_index
     ON tp_forum.thread (slug, forum);
 --
--- CREATE UNIQUE INDEX thread_covering_index
---     ON thread (forum_id, created, id, slug, title, message, forum_slug, user_nick, created, votes_count);
+CREATE UNIQUE INDEX thread_covering_index
+    ON thread (forum, created, id, slug, title, message, forum, author, created, votes);
 
 --
 -- POST
@@ -158,29 +151,33 @@ CREATE UNLOGGED TABLE tp_forum.post
     message   TEXT,
     created   TIMESTAMPTZ,
 
-    thread    INTEGER REFERENCES tp_forum.thread (id),
+    thread    BIGINT REFERENCES tp_forum.thread (id),
     forum     CITEXT REFERENCES tp_forum.forum (slug),
 
-    parent    INTEGER references tp_forum.post (id) DEFAULT 0,
+    parent    BIGINT references tp_forum.post (id) DEFAULT 0,
     is_edited BOOLEAN                               DEFAULT FALSE,
 
-    path      integer[]
+    path      BIGINT[]
 );
 
-CREATE OR REPLACE FUNCTION change_edited_post() RETURNS trigger as $change_edited_post$
+CREATE OR REPLACE FUNCTION change_edited_post() RETURNS trigger as
+$change_edited_post$
 BEGIN
-  IF NEW.message <> OLD.message THEN
-    NEW.is_edited = true;
-  END IF;
+    IF NEW.message <> OLD.message THEN
+        NEW.is_edited = true;
+    END IF;
 
-  return NEW;
+    return NEW;
 END;
 $change_edited_post$ LANGUAGE plpgsql;
 
 DROP TRIGGER IF EXISTS change_edited_post ON tp_forum.post;
 
-CREATE TRIGGER change_edited_post BEFORE UPDATE ON tp_forum.post
-  FOR EACH ROW EXECUTE PROCEDURE change_edited_post();
+CREATE TRIGGER change_edited_post
+    BEFORE UPDATE
+    ON tp_forum.post
+    FOR EACH ROW
+EXECUTE PROCEDURE change_edited_post();
 
 CREATE OR REPLACE FUNCTION create_path() RETURNS trigger as
 $create_path$
@@ -190,7 +187,7 @@ BEGIN
         return NEW;
     end if;
 
-    NEW.path := (SELECT array_append(p.path, NEW.id::integer)
+    NEW.path := (SELECT array_append(p.path, NEW.id::bigint)
                  from tp_forum.post p
                  where p.id = NEW.parent);
     RETURN NEW;
@@ -211,6 +208,10 @@ BEGIN
     SET posts = posts + 1
     WHERE lower(slug) = lower((SELECT forum FROM tp_forum.thread WHERE id = NEW.thread));
 
+    IF NEW.id = 0 THEN
+        return null;
+    end if;
+
     INSERT INTO tp_forum.forum_user
         (nickname, forum)
     VALUES (NEW.author,
@@ -227,23 +228,20 @@ CREATE TRIGGER on_post_insert
     FOR EACH ROW
 EXECUTE PROCEDURE post_insert();
 
--- CREATE INDEX posts_thread_id_index
---     ON post (thread_id, id);
+CREATE INDEX posts_thread_id_index
+    ON tp_forum.post (thread, id);
 --
--- CREATE INDEX posts_thread_id_index2
---     ON post (thread_id);
+CREATE INDEX posts_thread_id_index2
+    ON tp_forum.post (thread);
 --
--- CREATE INDEX posts_thread_id_parents_index
---     ON post (thread_id, parents);
+CREATE INDEX posts_thread_path_index
+    ON tp_forum.post (thread, path);
 --
--- CREATE INDEX ON post (thread_id, id, parent, main_parent)
---     WHERE parent = 0;
+CREATE INDEX parent_tree_index
+    ON tp_forum.post ((path[0]), path DESC, id);
 --
--- CREATE INDEX parent_tree_3_1
---     ON post (main_parent, parents DESC, id);
---
--- CREATE INDEX parent_tree_4
---     ON post (id, main_parent);
+CREATE INDEX parent_tree_index2
+    ON post (id, (path[0]));
 --
 --
 -- VOTE
@@ -251,7 +249,7 @@ EXECUTE PROCEDURE post_insert();
 CREATE UNLOGGED TABLE tp_forum.vote
 (
     user_nickname citext references tp_forum.users (nickname) NOT NULL,
-    thread        INTEGER REFERENCES tp_forum.thread (id)     NOT NULL,
+    thread        BIGINT REFERENCES tp_forum.thread (id)     NOT NULL,
 
     vote_val      INTEGER
 );

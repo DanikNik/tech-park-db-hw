@@ -6,173 +6,59 @@ import (
 )
 
 const (
-	checkThreadExistByID = `
+	checkThreadExistQuery = `
 	SELECT FROM tp_forum.thread WHERE id = $1
 	`
-	checkThreadExistAndGetIDBySlug = `
+	threadGetIdQuery = `
 	SELECT id FROM tp_forum.thread WHERE lower(slug) = lower($1)
 	`
 )
 
-func isThreadExist(id int) (bool, error) {
-	err := dbObj.QueryRow(checkThreadExistByID, id).Scan()
+func checkThreadExists(id int) (bool, error) {
+	err := dbObj.QueryRow(checkThreadExistQuery, id).Scan()
 	if err == pgx.ErrNoRows {
 		return false, nil
 	}
 	return true, nil
 }
 
-func ifThreadExistGetID(slug string) (int, bool, error) {
+func threadGetId(slug string) (int, bool, error) {
 	id := -1
-	err := dbObj.QueryRow(checkThreadExistAndGetIDBySlug, slug).Scan(&id)
+	err := dbObj.QueryRow(threadGetIdQuery, slug).Scan(&id)
 	if err == pgx.ErrNoRows {
 		return id, false, nil
 	}
 	return id, true, nil
 }
 
-func SelectAllPostsByThread(slugOrIDThread string, limit int, desc bool,
+func GetPostsByThread(slugOrId string, limit int, desc bool,
 	since int, sort string, posts *[]*models.Post) error {
 
-	isExist := false
+	flag := false
 	threadID := 0
-	if id, isID := isIdOrSlug(slugOrIDThread); isID {
+	if id, isID := isIdOrSlug(slugOrId); isID {
 		threadID = id
-		isExist, _ = isThreadExist(threadID)
+		flag, _ = checkThreadExists(threadID)
 	} else {
-		threadID, isExist, _ = ifThreadExistGetID(slugOrIDThread)
+		threadID, flag, _ = threadGetId(slugOrId)
 	}
 
-	if !isExist {
+	if !flag {
 		return ErrNotFound
 	}
 
-	return selectAllPostsByThreadID(threadID, limit, desc, since, sort, posts)
+	return getPostsByThreadId(threadID, limit, desc, since, sort, posts)
 }
 
-const selectPostsFlatLimitByID = `
-	SELECT p.id, p.author, p.created, p.is_edited, p.message, p.parent, p.thread, p.forum
-	FROM tp_forum.post p
-	WHERE p.thread = $1
-	ORDER BY p.id
-	LIMIT $2
-`
-
-const selectPostsFlatLimitDescByID = `
-	SELECT p.id, p.author, p.created, p.is_edited, p.message, p.parent, p.thread, p.forum
-	FROM tp_forum.post p
-	WHERE p.thread = $1
-	ORDER BY p.id DESC
-	LIMIT $2
-`
-
-const selectPostsFlatLimitSinceByID = `
-	SELECT p.id, p.author, p.created, p.is_edited, p.message, p.parent, p.thread, p.forum
-	FROM tp_forum.post p
-	WHERE p.thread = $1 and p.id > $2
-	ORDER BY p.id
-	LIMIT $3
-`
-const selectPostsFlatLimitSinceDescByID = `
-	SELECT p.id, p.author, p.created, p.is_edited, p.message, p.parent, p.thread, p.forum
-	FROM tp_forum.post p
-	WHERE p.thread = $1 and p.id < $2
-	ORDER BY p.id DESC
-	LIMIT $3
-`
-
-const selectPostsTreeLimitByID = `
-	SELECT p.id, p.author, p.created, p.is_edited, p.message, p.parent, p.thread, p.forum
-	FROM tp_forum.post p
-	WHERE p.thread = $1
-	ORDER BY p.path
-	LIMIT $2
-`
-
-const selectPostsTreeLimitDescByID = `
-	SELECT p.id, p.author, p.created, p.is_edited, p.message, p.parent, p.thread, p.forum
-	FROM tp_forum.post p
-	WHERE p.thread = $1
-	ORDER BY path DESC
-	LIMIT $2
-`
-
-const selectPostsTreeLimitSinceByID = `
-	SELECT p.id, p.author, p.created, p.is_edited, p.message, p.parent, p.thread, p.forum
-	FROM tp_forum.post p
-	WHERE p.thread = $1 and (p.path > (SELECT p2.path from tp_forum.post p2 where p2.id = $2))
-	ORDER BY p.path
-	LIMIT $3
-`
-
-const selectPostsTreeLimitSinceDescByID = `
-	SELECT p.id, p.author, p.created, p.is_edited, p.message, p.parent, p.thread, p.forum
-	FROM tp_forum.post p
-	WHERE p.thread = $1 and (p.path < (SELECT p2.path from tp_forum.post p2 where p2.id = $2))
-	ORDER BY p.path DESC
-	LIMIT $3
-`
-
-const selectPostsParentTreeLimitByID = `
-	SELECT p.id, p.author, p.created, p.is_edited, p.message, p.parent, p.thread, p.forum
-	FROM tp_forum.post p
-	WHERE p.thread = $1 and p.path[1] IN (
-		SELECT p2.path[1]
-		FROM tp_forum.post p2
-		WHERE p2.thread = $2 AND p2.parent = 0
-		ORDER BY p2.id
-		LIMIT $3
-	)
-	ORDER BY path
-`
-
-const selectPostsParentTreeLimitDescByID = `
-SELECT p.id, p.author, p.created, p.is_edited, p.message, p.parent, p.thread, p.forum
-FROM tp_forum.post p
-WHERE p.thread = $1 and p.path[1] IN (
-    SELECT p2.path[1]
-    FROM tp_forum.post p2
-	WHERE p2.thread = $2 AND p2.parent = 0
-	ORDER BY p2.id DESC
-    LIMIT $3
-)
-ORDER BY p.path[1] DESC, p.path[2:]
-`
-
-const selectPostsParentTreeLimitSinceByID = `
-	SELECT p.id, p.author, p.created, p.is_edited, p.message, p.parent, p.thread, p.forum
-	FROM tp_forum.post p
-	WHERE p.thread = $1 and p.path[1] IN (
-		SELECT p2.path[1]
-		FROM tp_forum.post p2
-		WHERE p2.thread = $2 AND p2.parent = 0 and p2.path[1] > (SELECT p3.path[1] from tp_forum.post p3 where p3.id = $3)
-		ORDER BY p2.id
-		LIMIT $4
-	)
-	ORDER BY p.path
-`
-
-const selectPostsParentTreeLimitSinceDescByID = `
-	SELECT p.id, p.author, p.created, p.is_edited, p.message, p.parent, p.thread, p.forum
-	FROM tp_forum.post p
-	WHERE p.thread = $1 and p.path[1] IN (
-		SELECT p2.path[1]
-		FROM tp_forum.post p2
-		WHERE p2.thread = $2 AND p2.parent = 0 and p2.path[1] < (SELECT p3.path[1] from tp_forum.post p3 where p3.id = $3)
-		ORDER BY p2.id DESC
-		LIMIT $4
-	)
-	ORDER BY p.path[1] DESC, p.path[2:]
-`
-
-func selectAllPostsByThreadID(id int, limit int, desc bool,
+func getPostsByThreadId(id int, limit int, desc bool,
 	since int, sort string, posts *[]*models.Post) error {
 
 	rows, _ := doQuery(id, limit, desc, since, sort)
 	defer rows.Close()
 	for rows.Next() {
 		post := &models.Post{}
-		scanPostRows(rows, post)
+		rows.Scan(&post.Id, &post.Author, &post.Created, &post.IsEdited,
+			&post.Message, &post.Parent, &post.Thread, &post.Forum)
 		*posts = append(*posts, post)
 	}
 

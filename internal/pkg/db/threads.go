@@ -63,9 +63,10 @@ func GetThread(slugOrId string) (*models.Thread, error) {
 	} else {
 		row, _ = QueryRow(GetThreadBySlugQuery, slugOrId)
 	}
+	var fSlug sql.NullString
 	err := row.Scan(
 		&threadData.Id,
-		&threadData.Slug,
+		&fSlug,
 		&threadData.Author,
 		&threadData.Created,
 		&threadData.Forum,
@@ -73,9 +74,13 @@ func GetThread(slugOrId string) (*models.Thread, error) {
 		&threadData.Message,
 		&threadData.Votes,
 	)
+	threadData.Slug = fSlug.String
 
-	if err == pgx.ErrNoRows {
-		return nil, ErrNotFound
+	if err != nil {
+		if err == pgx.ErrNoRows {
+			return nil, ErrNotFound
+		}
+		return nil, err
 	}
 
 	return &threadData, nil

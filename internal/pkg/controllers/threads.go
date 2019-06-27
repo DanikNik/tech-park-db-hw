@@ -12,8 +12,8 @@ import (
 func ThreadCreate(ctx *routing.Context) error {
 	threadData := models.Thread{}
 	forumSlug := ctx.Param("slug")
-	threadData.Forum = forumSlug
 	json.Unmarshal(ctx.PostBody(), &threadData)
+	threadData.Forum = forumSlug
 	err := db.CreateThread(&threadData)
 	if err != nil {
 		if err == db.ErrNotFound {
@@ -49,6 +49,10 @@ func ThreadGetOne(ctx *routing.Context) error {
 			data, _ := json.Marshal(models.NewErrorMessage())
 			ctx.Write(data)
 			return nil
+		} else {
+			ctx.SetStatusCode(500)
+			ctx.Write([]byte(err.Error()))
+			return nil
 		}
 	}
 	data, _ := json.Marshal(threadData)
@@ -60,7 +64,7 @@ func ThreadGetPosts(ctx *routing.Context) error {
 
 	posts := []*models.Post{}
 
-	err := db.SelectAllPostsByThread(ctx.Param("slug_or_id"),
+	err := db.GetPostsByThread(ctx.Param("slug_or_id"),
 		ctx.QueryArgs().GetUintOrZero("limit"), getBooleanFromQueryParam("desc", ctx.QueryArgs()),
 		ctx.QueryArgs().GetUintOrZero("since"),
 		string(ctx.QueryArgs().Peek("sort")), &posts)

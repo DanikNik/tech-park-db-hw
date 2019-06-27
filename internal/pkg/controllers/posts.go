@@ -22,7 +22,7 @@ func PostGetOne(ctx *routing.Context) error {
 
 	postFull.Post.Id = int(postIDToInt(ctx))
 	related := ctx.QueryArgs().Peek("related")
-	err := db.SelectPostFull(strings.Split(string(related), ","), postFull)
+	err := db.GetPostFullData(strings.Split(string(related), ","), postFull)
 	if err == db.ErrNotFound {
 		ctx.SetStatusCode(http.StatusNotFound)
 		data, _ := json.Marshal(models.NewErrorMessage())
