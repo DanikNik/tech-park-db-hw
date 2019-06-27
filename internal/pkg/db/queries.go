@@ -146,15 +146,9 @@ const (
 	DO UPDATE SET vote_val = EXCLUDED.vote_val;
 `
 
-	threadUpdateVotesCountQuery = `
-	UPDATE tp_forum.thread t
-	SET votes = (
-		SELECT SUM(vote_val)
-		FROM tp_forum.vote
-		WHERE thread=$1
-	)
-	WHERE id=$2
-	RETURNING votes`
+	threadGetVotesCountQuery = `
+	SELECT votes FROM tp_forum.thread WHERE id = $1;	
+`
 )
 
 const (

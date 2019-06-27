@@ -26,7 +26,7 @@ func DoVote(threadSlugOrId string, vote models.Vote) (*models.Thread, error) {
 		panic(err)
 	}
 
-	row := dbObj.QueryRow(threadUpdateVotesCountQuery, threadData.Id, threadData.Id)
+	row := dbObj.QueryRow(threadGetVotesCountQuery, threadData.Id)
 	row.Scan(&threadData.Votes)
 	return threadData, nil
 }

@@ -155,7 +155,7 @@ CREATE UNLOGGED TABLE tp_forum.post
     forum     CITEXT REFERENCES tp_forum.forum (slug),
 
     parent    BIGINT references tp_forum.post (id) DEFAULT 0,
-    is_edited BOOLEAN                               DEFAULT FALSE,
+    is_edited BOOLEAN                              DEFAULT FALSE,
 
     path      BIGINT[]
 );
@@ -204,7 +204,7 @@ CREATE OR REPLACE FUNCTION post_insert()
     RETURNS TRIGGER AS
 $BODY$
 BEGIN
---     UPDATE tp_forum.forum
+    --     UPDATE tp_forum.forum
 --     SET posts = posts + 1
 --     WHERE lower(slug) = lower((SELECT forum FROM tp_forum.thread WHERE id = NEW.thread));
 
@@ -252,13 +252,55 @@ CREATE INDEX parent_tree_index2
 CREATE UNLOGGED TABLE tp_forum.vote
 (
     user_nickname citext references tp_forum.users (nickname) NOT NULL,
-    thread        BIGINT REFERENCES tp_forum.thread (id)     NOT NULL,
+    thread        BIGINT REFERENCES tp_forum.thread (id)      NOT NULL,
 
     vote_val      INTEGER
 );
 
 CREATE UNIQUE INDEX user_thread_unique_index
     ON tp_forum.vote (user_nickname, thread);
+
+-- CREATE PROCEDURE vote_update(nickname citext, threadid integer, prev_vote_val integer)
+--     LANGUAGE SQL
+-- AS
+-- $$
+--     DELETE FROM tp_forum.vote WHERE user_nickname = nickname AND thread = threadid;
+--     UPDATE tp_forum.thread SET votes = votes - prev_vote_val WHERE id = threadid;
+-- $$;
+
+CREATE OR REPLACE FUNCTION vote_add() RETURNS TRIGGER AS $emp_audit$
+    BEGIN
+    UPDATE tp_forum.thread
+    SET votes = votes + NEW.vote_val
+    WHERE id = NEW.thread;
+    RETURN NULL;
+    END;
+$emp_audit$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE FUNCTION vote_update() RETURNS TRIGGER AS $emp_audit$
+    BEGIN
+    UPDATE tp_forum.thread
+    SET votes = votes - OLD.vote_val + NEW.vote_val
+    WHERE id = OLD.thread;
+    RETURN NULL;
+    END;
+$emp_audit$ LANGUAGE plpgsql;
+
+DROP TRIGGER IF EXISTS vote_update ON tp_forum.vote;
+
+CREATE TRIGGER vote_insert
+  AFTER INSERT
+  ON tp_forum.vote
+  FOR EACH ROW EXECUTE PROCEDURE vote_add();
+
+DROP TRIGGER IF EXISTS vote_update ON tp_forum.vote;
+
+CREATE TRIGGER vote_update
+  AFTER UPDATE
+  ON tp_forum.vote
+  FOR EACH ROW EXECUTE PROCEDURE vote_update();
+
+
 
 
 TRUNCATE TABLE tp_forum.users, tp_forum.forum, tp_forum.thread, tp_forum.post, tp_forum.vote, tp_forum.forum_user CASCADE;
